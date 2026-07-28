@@ -15,8 +15,22 @@ npm run dev        # 開発サーバー (http://localhost:3000)
 npm test           # 計算エンジンのユニットテスト (Vitest)
 npm run lint       # ESLint
 npm run typecheck  # TypeScript
-npm run build      # 本番ビルド
+npm run build      # 本番ビルド（静的エクスポート → out/）
 ```
+
+## デプロイ（Cloudflare Workers）
+
+静的エクスポートした `out/` を Cloudflare Workers（Static Assets）で配信する。
+設定は [wrangler.jsonc](wrangler.jsonc)。
+
+```bash
+npx wrangler login   # 初回のみ（またはCLOUDFLARE_API_TOKENを設定）
+npm run deploy       # next build && wrangler deploy
+npm run preview      # ローカルでCloudflare配信を再現（wrangler dev）
+```
+
+カスタムドメイン `nisa.nexeed-lab.com` は wrangler.jsonc の `routes` で宣言済み。
+`nexeed-lab.com` のゾーンが同じCloudflareアカウントにあれば、デプロイ時にDNSレコードと証明書が自動設定される。
 
 ## 構成
 

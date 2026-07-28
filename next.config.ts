@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // 全ページSSGのため静的エクスポートし、Cloudflare Workers (Static Assets) で配信する
+  output: "export",
 };
 
 export default nextConfig;

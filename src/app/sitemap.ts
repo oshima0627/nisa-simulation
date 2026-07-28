@@ -1,5 +1,8 @@
 import type { MetadataRoute } from "next";
 
+// 静的エクスポート（output: "export"）ではメタデータルートも静的化が必要
+export const dynamic = "force-static";
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://nisa.nexeed-lab.com";
   return [

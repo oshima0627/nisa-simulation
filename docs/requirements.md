@@ -3,7 +3,7 @@
 - 版: v1.1
 - 作成日: 2026-07-28
 - ステータス: レビュー中
-- 公開URL: https://nisa.nexeed-lab.com（独自ドメイン、`nexeed-lab.com` のサブドメインを Vercel に割当）
+- 公開URL: https://nisa.nexeed-lab.com（独自ドメイン、`nexeed-lab.com` のサブドメインを Cloudflare に割当）
 
 ---
 
@@ -170,9 +170,9 @@
 | パフォーマンス | Lighthouse Performance 90+ / 計算は全てクライアントサイドで即時（<16ms目標） |
 | アクセシビリティ | WCAG 2.1 AA 準拠目標。グラフには数値テーブルの代替表示 |
 | SEO | SSG によるメタ情報・構造化データ出力。用語解説コンテンツページを併設（※金融領域はYMYLのため上位表示は長期戦と認識する） |
-| ドメイン | `nisa.nexeed-lab.com`（独自サブドメイン）。Vercel にカスタムドメインとして設定し、HTTPS は Vercel の自動証明書を利用 |
+| ドメイン | `nisa.nexeed-lab.com`（独自サブドメイン）。Cloudflare Workers のカスタムドメインとして設定し、HTTPS は Cloudflare の自動証明書を利用 |
 | ブラウザ | 直近2バージョンの Chrome / Safari / Edge / Firefox、iOS Safari |
-| プライバシー | 入力データはサーバー送信しない。アクセス解析は Vercel Analytics（Cookieレス）のみ |
+| プライバシー | 入力データはサーバー送信しない。アクセス解析は Cloudflare Web Analytics（Cookieレス）のみ |
 | 免責表示 | 「本シミュレーションは概算であり、将来の運用成果を保証するものではありません。投資助言ではありません」を**結果表示の直下**とフッターに常設 |
 
 ---
@@ -183,15 +183,15 @@
 
 | レイヤ | 技術 | 理由 |
 |---|---|---|
-| フレームワーク | **Next.js（App Router）+ TypeScript** | SSGでSEO対応、Vercel無料デプロイ、エコシステム |
+| フレームワーク | **Next.js（App Router）+ TypeScript** | SSG（`output: "export"` による静的エクスポート）でSEO対応、エコシステム |
 | スタイリング | Tailwind CSS | 開発速度、デザイン一貫性 |
 | グラフ | Recharts | React親和性、積み上げ面グラフ・レスポンシブ対応 |
 | 状態管理 | React標準（useState/useReducer）＋ URLSearchParams | 規模的に外部ライブラリ不要 |
 | テスト | **Vitest**（計算ロジック）＋ Testing Library（UI）＋ Playwright（E2E、主要導線のみ） | 金額計算の正確性担保が最優先 |
 | Lint/Format | ESLint + Prettier | 標準構成 |
 | CI | GitHub Actions（lint / typecheck / test をPRごとに実行） | 無料枠 |
-| ホスティング | Vercel（Hobbyプラン） | 無料、プレビューデプロイ |
-| 解析 | Vercel Analytics | Cookieレス、無料枠 |
+| ホスティング | **Cloudflare Workers（Static Assets）** | 無料枠で運用可、独自ドメイン・自動HTTPS。`wrangler deploy` でデプロイ |
+| 解析 | Cloudflare Web Analytics | Cookieレス、無料。ダッシュボードからスニペット追加 |
 
 ### 5.1 設計方針
 
@@ -305,6 +305,7 @@ src/
 | 2026-07-28 | デザインをモダン方向に調整：くすみカラー・角ゴシック＋Outfit・罫線基調のミニマルレイアウトへ改訂（§6.2, §6.3） |
 | 2026-07-28 | 赤系はマイナスの印象を与えるため金額・グラフ・ゲージから排除。青（元本）×緑（利益）をメインとし、赤はエラー表示専用とする（§6.3） |
 | 2026-07-28 | フォントを丸ゴシック系（Zen Maru Gothic＋Quicksand）に決定。青緑はくすみパステル（ペールアクア×ミント）に調整し、かわいらしさとカラーセマンティクスを両立（§6.3） |
+| 2026-07-28 | ホスティングを Vercel から Cloudflare Workers（Static Assets）に変更。Next.js は静的エクスポート運用、解析は Cloudflare Web Analytics（§5） |
 | 2026-07-28 | 「AI感」を出さないデザイン・文体ガイドラインを設ける（§6.2） |
 
 ## 9. 未確定事項（今後の壁打ち対象）

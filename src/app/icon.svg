@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <title>NISAシミュレーター</title>
+  <rect width="64" height="64" rx="14" fill="#22786b"/>
+  <!-- 積立の成長を表す3本のバー -->
+  <rect x="12" y="36" width="9" height="16" rx="2" fill="#7fcdbb" opacity="0.55"/>
+  <rect x="26" y="28" width="9" height="24" rx="2" fill="#7fcdbb" opacity="0.75"/>
+  <rect x="40" y="19" width="9" height="33" rx="2" fill="#7fcdbb"/>
+  <!-- 右肩上がりの資産曲線と矢印 -->
+  <path d="M11 30 Q 26 27 36 20 T 51 11" stroke="#ffffff" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+  <path d="M42 10 L52 10 L52 20" stroke="#ffffff" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

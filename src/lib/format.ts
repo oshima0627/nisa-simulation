@@ -8,6 +8,19 @@ export function formatYen(yen: number): string {
   return `${Math.round(yen).toLocaleString("ja-JP")}円`;
 }
 
+/**
+ * 入力金額（積立額・取り崩し額など）の表示用。
+ * 1万円で割り切れるなら「3万円」「10万円」、端数があれば「35,000円」と
+ * 正確な金額のまま表示する（勝手に万円へ丸めない）。
+ */
+export function formatInputYen(yen: number): string {
+  const rounded = Math.round(yen);
+  if (rounded !== 0 && rounded % 10_000 === 0) {
+    return `${(rounded / 10_000).toLocaleString("ja-JP")}万円`;
+  }
+  return `${rounded.toLocaleString("ja-JP")}円`;
+}
+
 /** 通算月数を「◯年目の◯月」形式にする（1始まり） */
 export function formatMonthOrdinal(totalMonth: number): string {
   const year = Math.ceil(totalMonth / 12);

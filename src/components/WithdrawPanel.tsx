@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { formatManYen } from "@/lib/format";
+import { formatInputYen, formatManYen } from "@/lib/format";
 import { simulateAccumulation } from "@/lib/simulation/accumulate";
 import { simulateWithdrawal } from "@/lib/simulation/withdraw";
 import type { SimulationResult } from "@/lib/simulation/types";
@@ -108,7 +108,7 @@ export default function WithdrawPanel({ input, accResult, config, onChange }: Pr
     <div className="space-y-6">
       <p className="rounded-xl bg-mint-tint px-4 py-3 text-xs leading-relaxed text-mint-text">
         積立シミュレーションの条件を引き継いでいます: 毎月
-        {formatManYen(input.monthlyAmount)} × {accYears}年（年利{input.annualReturnPct}%）→
+        {formatInputYen(input.monthlyAmount)} × {accYears}年（年利{input.annualReturnPct}%）→
         取り崩し開始時の資産は約<b>{formatManYen(startValue)}</b>
       </p>
 
@@ -224,7 +224,7 @@ export default function WithdrawPanel({ input, accResult, config, onChange }: Pr
       <section aria-label="取り崩しシミュレーション結果">
         <p className="text-[13px] text-ink-soft">
           {config.method === "fixed"
-            ? `毎月${formatManYen(config.monthlyAmount)}ずつ取り崩すと、資産は`
+            ? `毎月${formatInputYen(config.monthlyAmount)}ずつ取り崩すと、資産は`
             : `毎年${config.annualRatePct}%ずつ取り崩すと、資産は`}
         </p>
         <p className="mt-1">

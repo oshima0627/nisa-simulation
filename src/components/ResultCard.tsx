@@ -1,6 +1,6 @@
 import type { SimulationResult } from "@/lib/simulation/types";
 import type { TaxComparison } from "@/lib/simulation/tax";
-import { formatManYen } from "@/lib/format";
+import { formatInputYen, formatManYen } from "@/lib/format";
 
 interface Props {
   result: SimulationResult;
@@ -23,7 +23,7 @@ export default function ResultCard({
   return (
     <section aria-label="シミュレーション結果">
       <p className="text-[13px] text-ink-soft">
-        毎月{formatManYen(monthlyAmount)} × {years}年（年利{annualReturnPct}%）で、あなたの資産は
+        毎月{formatInputYen(monthlyAmount)} × {years}年（年利{annualReturnPct}%）で、あなたの資産は
         {isReal && <span className="ml-1 font-medium text-aqua-text">〔実質価値〕</span>}
       </p>
       <p className="mt-1">

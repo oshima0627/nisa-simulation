@@ -20,6 +20,9 @@ interface Props {
 const inputClass =
   "font-num w-full rounded-xl border border-line bg-surface px-4 py-3 text-base text-ink outline-none transition-shadow focus:ring-2 focus:ring-mint";
 
+/** 生涯タイムラインの計算上限。年齢入力時は100歳、未入力時は通算100年目まで */
+const LIFETIME_HORIZON_YEARS = 100;
+/** 取り崩しフェーズ単体の上限（年） */
 const WITHDRAW_MAX_YEARS = 50;
 
 export default function WithdrawPanel({ input, accResult, config, onChange }: Props) {
@@ -39,6 +42,20 @@ export default function WithdrawPanel({ input, accResult, config, onChange }: Pr
 
   const startValue = deferResult?.finalValue ?? accResult.finalValue;
 
+  // 積立 → 据置 → 取り崩し を1本のタイムラインにつなぐ。
+  // タイムライン全体は100歳（年齢未入力なら通算100年目）で打ち切る
+  const accYears = input.years;
+  const deferYears = config.deferYears;
+  const withdrawStartYear = accYears + deferYears + 1;
+  const currentAge = input.currentAge;
+  const horizonTotalYears =
+    currentAge !== undefined ? LIFETIME_HORIZON_YEARS - currentAge : LIFETIME_HORIZON_YEARS;
+  const withdrawYears = Math.max(
+    0,
+    Math.min(WITHDRAW_MAX_YEARS, horizonTotalYears - accYears - deferYears),
+  );
+  const horizonLabel = currentAge !== undefined ? "100歳" : "100年目";
+
   const withdrawResult = useMemo(
     () =>
       simulateWithdrawal({
@@ -49,16 +66,17 @@ export default function WithdrawPanel({ input, accResult, config, onChange }: Pr
         method: config.method,
         monthlyAmount: config.monthlyAmount,
         annualRatePct: config.annualRatePct,
-        maxYears: WITHDRAW_MAX_YEARS,
+        maxYears: Math.max(1, withdrawYears),
       }),
-    [startValue, accResult.lifetimeUsed, input.annualReturnPct, input.feeAnnualPct, config],
+    [
+      startValue,
+      accResult.lifetimeUsed,
+      input.annualReturnPct,
+      input.feeAnnualPct,
+      config,
+      withdrawYears,
+    ],
   );
-
-  // 積立 → 据置 → 取り崩し を1本のタイムラインにつなぐ
-  const accYears = input.years;
-  const deferYears = config.deferYears;
-  const withdrawStartYear = accYears + deferYears + 1;
-  const currentAge = input.currentAge;
 
   const lifecycleData: LifecyclePoint[] = useMemo(() => {
     const label = (year: number) =>
@@ -194,6 +212,15 @@ export default function WithdrawPanel({ input, accResult, config, onChange }: Pr
         )}
       </div>
 
+      {withdrawYears === 0 && (
+        <p className="rounded-2xl bg-[#fdf1e8] px-5 py-5 text-sm leading-relaxed text-[#a06a3a]">
+          積立と据置の期間だけで計算上限（{horizonLabel}）に達しています。
+          積立期間・据置期間を短くすると取り崩しのシミュレーションが表示されます。
+        </p>
+      )}
+
+      {withdrawYears > 0 && (
+      <>
       <section aria-label="取り崩しシミュレーション結果">
         <p className="text-[13px] text-ink-soft">
           {config.method === "fixed"
@@ -213,9 +240,10 @@ export default function WithdrawPanel({ input, accResult, config, onChange }: Pr
           ) : (
             <>
               <span className="font-num text-4xl font-bold leading-tight text-mint-text">
-                {WITHDRAW_MAX_YEARS}年後
+                {withdrawYears}年後
               </span>
               <span className="font-maru ml-2 text-base font-bold">
+                {withdrawYears < WITHDRAW_MAX_YEARS ? `（${horizonLabel}時点）` : ""}
                 も約{formatManYen(withdrawResult.finalValue)}残ります
               </span>
             </>
@@ -254,10 +282,13 @@ export default function WithdrawPanel({ input, accResult, config, onChange }: Pr
       />
 
       <p className="text-[11px] leading-relaxed text-ink-soft">
+        ※計算は{horizonLabel}までを上限としています。
         ※売却した分の非課税枠（買ったときの金額分）は翌年に復活しますが、
         本シミュレーションでは復活した枠への再投資は行わない前提です。
         ※課税口座との比較は、受取額のうち利益部分に20.315%が課税される簡易モデルです。
       </p>
+      </>
+      )}
     </div>
   );
 }

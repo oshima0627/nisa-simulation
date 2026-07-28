@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { inputToParams, paramsToInput } from "./params";
-import type { SimulationInput } from "@/lib/simulation/types";
+import { inputToParams, paramsToInput, type ShareableInput } from "./params";
 
 describe("URLパラメータのシリアライズ", () => {
   it("往復変換で入力が保存される", () => {
-    const input: SimulationInput = {
+    const input: ShareableInput = {
       monthlyAmount: 50_000,
       annualReturnPct: 5,
       years: 20,
+      feeAnnualPct: 0.2,
+      inflationPct: 2,
       currentValue: 1_000_000,
       usedTsumitateQuota: 800_000,
       usedGrowthQuota: 200_000,

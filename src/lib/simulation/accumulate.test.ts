@@ -195,6 +195,21 @@ describe("simulateAccumulation: 詳細モード入力", () => {
     expect(result.uninvestedAmount).toBe(600_000);
   });
 
+  it("信託報酬は利回りからの単純控除（5%-1% = 4%と同一結果）", () => {
+    const withFee = simulateAccumulation({
+      monthlyAmount: 30_000,
+      annualReturnPct: 5,
+      feeAnnualPct: 1,
+      years: 20,
+    });
+    const equivalent = simulateAccumulation({
+      monthlyAmount: 30_000,
+      annualReturnPct: 4,
+      years: 20,
+    });
+    expect(withFee.finalValue).toBe(equivalent.finalValue);
+  });
+
   it("現在年齢を渡すとスナップショットに年齢が付く", () => {
     const result = simulateAccumulation({
       monthlyAmount: 10_000,

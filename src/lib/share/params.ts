@@ -11,8 +11,12 @@ import type { SimulationInput } from "@/lib/simulation/types";
  *
  * キー: m=毎月積立額, r=利回り%, y=年数, cv=現在評価額,
  *       ut=消化済みつみたて枠, ug=消化済み成長枠,
- *       b1m/b1a, b2m/b2a=ボーナス月と金額, age=現在年齢
+ *       b1m/b1a, b2m/b2a=ボーナス月と金額, age=現在年齢,
+ *       f=信託報酬%, i=インフレ率%
  */
+
+/** 共有対象の状態。インフレ率は表示用設定だがURLで再現できるよう含める */
+export type ShareableInput = SimulationInput & { inflationPct?: number };
 
 const clamp = (n: number, min: number, max: number) =>
   Math.min(Math.max(n, min), max);
@@ -30,11 +34,13 @@ function readNumber(
   return clamp(n, min, max);
 }
 
-export function inputToParams(input: SimulationInput): URLSearchParams {
+export function inputToParams(input: ShareableInput): URLSearchParams {
   const params = new URLSearchParams();
   params.set("m", String(input.monthlyAmount));
   params.set("r", String(input.annualReturnPct));
   params.set("y", String(input.years));
+  if (input.feeAnnualPct) params.set("f", String(input.feeAnnualPct));
+  if (input.inflationPct) params.set("i", String(input.inflationPct));
   if (input.currentValue) params.set("cv", String(input.currentValue));
   if (input.usedTsumitateQuota) params.set("ut", String(input.usedTsumitateQuota));
   if (input.usedGrowthQuota) params.set("ug", String(input.usedGrowthQuota));
@@ -48,7 +54,7 @@ export function inputToParams(input: SimulationInput): URLSearchParams {
   return params;
 }
 
-export function paramsToInput(params: URLSearchParams): SimulationInput | null {
+export function paramsToInput(params: URLSearchParams): ShareableInput | null {
   const monthlyAmount = readNumber(params, "m", 0, MAX_MONTHLY_AMOUNT);
   const annualReturnPct = readNumber(params, "r", 0, MAX_RETURN_PCT);
   const years = readNumber(params, "y", 1, MAX_YEARS);
@@ -73,6 +79,8 @@ export function paramsToInput(params: URLSearchParams): SimulationInput | null {
     monthlyAmount,
     annualReturnPct,
     years: Math.round(years),
+    feeAnnualPct: readNumber(params, "f", 0, 5),
+    inflationPct: readNumber(params, "i", 0, 10),
     currentValue: readNumber(params, "cv", 0, 1_000_000_000),
     usedTsumitateQuota: readNumber(params, "ut", 0, 18_000_000),
     usedGrowthQuota: readNumber(params, "ug", 0, 12_000_000),

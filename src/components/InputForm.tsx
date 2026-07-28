@@ -20,6 +20,10 @@ export interface FormState {
   bonus2Month: number;
   bonus2Amount: number;
   currentAge: number | "";
+  /** 信託報酬（年率%）。0 = 考慮しない */
+  feePct: number;
+  /** 想定インフレ率（年率%）。0 = 考慮しない */
+  inflationPct: number;
 }
 
 interface Props {
@@ -205,6 +209,41 @@ export default function InputForm({
                 step={10000}
                 value={form.usedGrowthQuota}
                 onChange={num("usedGrowthQuota", 0, 12_000_000)}
+                className={inputClass}
+              />
+            </Field>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              label="信託報酬（年率）"
+              suffix="%"
+              hint="低コストのインデックスファンドは0.1%前後"
+            >
+              <input
+                type="number"
+                inputMode="decimal"
+                min={0}
+                max={5}
+                step={0.01}
+                value={form.feePct}
+                onChange={num("feePct", 0, 5)}
+                className={inputClass}
+              />
+            </Field>
+            <Field
+              label="想定インフレ率（年率）"
+              suffix="%"
+              hint="0より大きくすると実質価値（今のお金の価値）でも表示できます"
+            >
+              <input
+                type="number"
+                inputMode="decimal"
+                min={0}
+                max={10}
+                step={0.1}
+                value={form.inflationPct}
+                onChange={num("inflationPct", 0, 10)}
                 className={inputClass}
               />
             </Field>

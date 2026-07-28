@@ -10,8 +10,10 @@ export interface BonusAddition {
 export interface SimulationInput {
   /** 毎月積立額（円） */
   monthlyAmount: number;
-  /** 想定利回り（年率%） */
+  /** 想定利回り（年率%、信託報酬控除前） */
   annualReturnPct: number;
+  /** 信託報酬（年率%）。実質利回り = annualReturnPct - feeAnnualPct */
+  feeAnnualPct?: number;
   /** 積立期間（年） */
   years: number;
   /** 現在のNISA評価額（円）。詳細モード用 */

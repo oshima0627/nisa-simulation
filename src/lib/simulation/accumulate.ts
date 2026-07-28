@@ -18,7 +18,9 @@ import type { SimulationInput, SimulationResult, YearSnapshot } from "./types";
  *   うち成長1,200万）は簿価ベースで管理し、枠が尽きた分は投資されない
  */
 export function simulateAccumulation(input: SimulationInput): SimulationResult {
-  const monthlyRate = input.annualReturnPct / 100 / 12;
+  // 信託報酬は年率から単純控除する簡易方式（docs/requirements.md F6）
+  const effectiveAnnualPct = input.annualReturnPct - (input.feeAnnualPct ?? 0);
+  const monthlyRate = effectiveAnnualPct / 100 / 12;
   const totalMonths = input.years * 12;
 
   const bonusByMonth = new Map<number, number>();

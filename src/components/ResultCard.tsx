@@ -8,6 +8,8 @@ interface Props {
   years: number;
   monthlyAmount: number;
   annualReturnPct: number;
+  /** インフレ調整後（実質価値）の表示かどうか */
+  isReal?: boolean;
 }
 
 export default function ResultCard({
@@ -16,11 +18,13 @@ export default function ResultCard({
   years,
   monthlyAmount,
   annualReturnPct,
+  isReal = false,
 }: Props) {
   return (
     <section aria-label="シミュレーション結果">
       <p className="text-[13px] text-ink-soft">
         毎月{formatManYen(monthlyAmount)} × {years}年（年利{annualReturnPct}%）で、あなたの資産は
+        {isReal && <span className="ml-1 font-medium text-aqua-text">〔実質価値〕</span>}
       </p>
       <p className="mt-1">
         <span className="font-num text-5xl font-bold leading-tight text-mint-text">

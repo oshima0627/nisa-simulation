@@ -12,11 +12,27 @@ import type { SimulationInput } from "@/lib/simulation/types";
  * キー: m=毎月積立額, r=利回り%, y=年数, cv=現在評価額,
  *       ut=消化済みつみたて枠, ug=消化済み成長枠,
  *       b1m/b1a, b2m/b2a=ボーナス月と金額, age=現在年齢,
- *       f=信託報酬%, i=インフレ率%
+ *       f=信託報酬%, i=インフレ率%,
+ *       wm=取り崩し方式(f/r), wa=取り崩し月額, wr=取り崩し率%, wd=据置年数
  */
 
-/** 共有対象の状態。インフレ率は表示用設定だがURLで再現できるよう含める */
-export type ShareableInput = SimulationInput & { inflationPct?: number };
+/** 取り崩しタブの設定 */
+export interface WithdrawConfig {
+  /** 積立終了後の据置期間（年） */
+  deferYears: number;
+  /** 取り崩し方式 */
+  method: "fixed" | "rate";
+  /** 定額方式: 毎月の取り崩し額（円） */
+  monthlyAmount: number;
+  /** 定率方式: 年間の取り崩し率（%） */
+  annualRatePct: number;
+}
+
+/** 共有対象の状態。表示用設定もURLで再現できるよう含める */
+export type ShareableInput = SimulationInput & {
+  inflationPct?: number;
+  withdraw?: WithdrawConfig;
+};
 
 const clamp = (n: number, min: number, max: number) =>
   Math.min(Math.max(n, min), max);
@@ -51,6 +67,15 @@ export function inputToParams(input: ShareableInput): URLSearchParams {
     }
   });
   if (input.currentAge) params.set("age", String(input.currentAge));
+  if (input.withdraw) {
+    params.set("wm", input.withdraw.method === "rate" ? "r" : "f");
+    if (input.withdraw.deferYears) params.set("wd", String(input.withdraw.deferYears));
+    if (input.withdraw.method === "fixed") {
+      params.set("wa", String(input.withdraw.monthlyAmount));
+    } else {
+      params.set("wr", String(input.withdraw.annualRatePct));
+    }
+  }
   return params;
 }
 
@@ -75,10 +100,22 @@ export function paramsToInput(params: URLSearchParams): ShareableInput | null {
     }
   }
 
+  const wm = params.get("wm");
+  const withdraw: ShareableInput["withdraw"] =
+    wm === "f" || wm === "r"
+      ? {
+          method: wm === "r" ? "rate" : "fixed",
+          deferYears: Math.round(readNumber(params, "wd", 0, 50) ?? 0),
+          monthlyAmount: readNumber(params, "wa", 0, 10_000_000) ?? 100_000,
+          annualRatePct: readNumber(params, "wr", 0, 100) ?? 4,
+        }
+      : undefined;
+
   return {
     monthlyAmount,
     annualReturnPct,
     years: Math.round(years),
+    withdraw,
     feeAnnualPct: readNumber(params, "f", 0, 5),
     inflationPct: readNumber(params, "i", 0, 10),
     currentValue: readNumber(params, "cv", 0, 1_000_000_000),

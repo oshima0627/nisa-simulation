@@ -31,6 +31,34 @@ describe("URLパラメータのシリアライズ", () => {
     expect(params.toString()).toBe("m=30000&r=5&y=20");
   });
 
+  it("取り崩し設定も往復変換できる", () => {
+    const input: ShareableInput = {
+      monthlyAmount: 50_000,
+      annualReturnPct: 5,
+      years: 20,
+      withdraw: {
+        method: "fixed",
+        deferYears: 5,
+        monthlyAmount: 150_000,
+        annualRatePct: 4, // fixedでは未シリアライズ→復元時デフォルト4
+      },
+    };
+    expect(paramsToInput(inputToParams(input))).toEqual(input);
+
+    const rateInput: ShareableInput = {
+      monthlyAmount: 50_000,
+      annualReturnPct: 5,
+      years: 20,
+      withdraw: {
+        method: "rate",
+        deferYears: 0,
+        monthlyAmount: 100_000, // rateでは未シリアライズ→復元時デフォルト10万
+        annualRatePct: 3,
+      },
+    };
+    expect(paramsToInput(inputToParams(rateInput))).toEqual(rateInput);
+  });
+
   it("必須キーが欠けていたら null", () => {
     expect(paramsToInput(new URLSearchParams("m=30000&r=5"))).toBeNull();
     expect(paramsToInput(new URLSearchParams(""))).toBeNull();

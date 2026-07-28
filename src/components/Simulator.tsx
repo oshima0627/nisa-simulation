@@ -8,6 +8,7 @@ import {
   inputToParams,
   paramsToInput,
   type ShareableInput,
+  type WithdrawConfig,
 } from "@/lib/share/params";
 import { formatManYen } from "@/lib/format";
 import AssetChart from "./AssetChart";
@@ -16,6 +17,7 @@ import QuotaGauge from "./QuotaGauge";
 import ResultCard from "./ResultCard";
 import ReversePanel from "./ReversePanel";
 import ShareButtons from "./ShareButtons";
+import WithdrawPanel from "./WithdrawPanel";
 
 const STORAGE_KEY = "nisa-sim-input-v1";
 
@@ -89,7 +91,13 @@ function hasDetailedValues(form: FormState): boolean {
 export default function Simulator() {
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [detailed, setDetailed] = useState(false);
-  const [mode, setMode] = useState<"sim" | "reverse">("sim");
+  const [mode, setMode] = useState<"sim" | "reverse" | "withdraw">("sim");
+  const [withdrawConfig, setWithdrawConfig] = useState<WithdrawConfig>({
+    deferYears: 0,
+    method: "fixed",
+    monthlyAmount: 100_000,
+    annualRatePct: 4,
+  });
   const [display, setDisplay] = useState<"nominal" | "real">("nominal");
   const [shareUrl, setShareUrl] = useState("");
   const hydrated = useRef(false);
@@ -104,6 +112,10 @@ export default function Simulator() {
       const restored = inputToForm(fromUrl);
       setForm(restored);
       setDetailed(hasDetailedValues(restored));
+      if (fromUrl.withdraw) {
+        setWithdrawConfig(fromUrl.withdraw);
+        setMode("withdraw");
+      }
     } else {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
@@ -139,10 +151,15 @@ export default function Simulator() {
     [showReal, result, form.inflationPct],
   );
 
-  // 入力変更のたびに localStorage と URL（履歴を汚さない replaceState）へ反映
+  // 入力変更のたびに localStorage と URL（履歴を汚さない replaceState）へ反映。
+  // 取り崩しタブを開いている間はその設定もURLに含める
+  const shareInput = useMemo(
+    () => (mode === "withdraw" ? { ...input, withdraw: withdrawConfig } : input),
+    [input, mode, withdrawConfig],
+  );
   useEffect(() => {
     if (!hydrated.current) return;
-    const params = inputToParams(input);
+    const params = inputToParams(shareInput);
     const url = `${window.location.origin}${window.location.pathname}?${params}`;
     setShareUrl(url);
     window.history.replaceState(null, "", `?${params}`);
@@ -151,7 +168,7 @@ export default function Simulator() {
     } catch {
       // ストレージが使えない環境では保存しない
     }
-  }, [input]);
+  }, [shareInput, input]);
 
   const tabClass = (active: boolean) =>
     `font-maru rounded-full px-5 py-2 text-sm font-bold transition-colors ${
@@ -179,9 +196,37 @@ export default function Simulator() {
         >
           目標から逆算
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === "withdraw"}
+          onClick={() => setMode("withdraw")}
+          className={tabClass(mode === "withdraw")}
+        >
+          取り崩し
+        </button>
       </div>
 
-      {mode === "reverse" ? (
+      {mode === "withdraw" ? (
+        <section className="rounded-[1.25rem] border border-line bg-surface p-5 shadow-[0_4px_20px_rgba(59,55,52,0.04)] sm:p-7">
+          <h1 className="font-maru mb-5 text-lg font-bold">
+            貯めた資産を、どう受け取る？
+          </h1>
+          <WithdrawPanel
+            input={input}
+            accResult={result}
+            config={withdrawConfig}
+            onChange={(next) => setWithdrawConfig((prev) => ({ ...prev, ...next }))}
+          />
+          <div className="mt-6 border-t border-line pt-6">
+            <ShareButtons
+              shareUrl={shareUrl}
+              finalValue={result.finalValue}
+              years={form.years}
+            />
+          </div>
+        </section>
+      ) : mode === "reverse" ? (
         <section className="rounded-[1.25rem] border border-line bg-surface p-5 shadow-[0_4px_20px_rgba(59,55,52,0.04)] sm:p-7">
           <h1 className="font-maru mb-5 text-lg font-bold">
             目標額から毎月の積立額をきめる

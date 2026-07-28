@@ -2,7 +2,7 @@
 // デプロイ: npm run deploy（要 `wrangler login` または CLOUDFLARE_API_TOKEN）
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "nisa-simulator",
+  "name": "nisa-simulation",
   "compatibility_date": "2026-07-01",
   "assets": {
     "directory": "./out",

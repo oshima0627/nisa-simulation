@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+/* デザイントークン（docs/requirements.md §6.3） */
+@theme {
+  /* "base" という名前は text-base（フォントサイズ）と衝突するため使わない */
+  --color-ivory: #fbfaf7; /* ウォームアイボリー */
+  --color-surface: #ffffff;
+  --color-mint: #7fcdbb;
+  --color-mint-deep: #2c8c7d;
+  --color-mint-text: #22786b;
+  --color-mint-tint: #e4f4ef;
+  --color-aqua: #8fc1e4;
+  --color-aqua-text: #4a7fac;
+  --color-apricot: #f5be8f;
+  --color-ink: #3b3734; /* ウォームチャコール */
+  --color-ink-soft: #98938c;
+  --color-line: #ece9e3;
+  --color-error: #d64545;
+
+  --font-sans: var(--font-noto-sans-jp), sans-serif;
+  --font-maru: var(--font-zen-maru), sans-serif;
+  --font-num: var(--font-quicksand), var(--font-zen-maru), sans-serif;
+
+  --radius-card: 1.25rem;
+}
+
+body {
+  background: var(--color-ivory);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+.font-maru {
+  font-family: var(--font-maru);
+}
+
+.font-num {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+}

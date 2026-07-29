@@ -1,0 +1,10 @@
+{
+  // Tailwind CSS v4 の @theme / @apply などを VSCode 内蔵の CSS リンターが
+  // 未知の at-rule として警告するため無効化する。実際の解釈は
+  // postcss.config.mjs 経由の @tailwindcss/postcss が行う。
+  "css.lint.unknownAtRules": "ignore",
+
+  // v4 は tailwind.config.js を持たず CSS 側が設定の起点になるため、
+  // Tailwind CSS IntelliSense に読み込み先を明示する。
+  "tailwindCSS.experimental.configFile": "src/app/globals.css"
+}

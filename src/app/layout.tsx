@@ -27,7 +27,7 @@ const SITE_URL = "https://nisa.nexeed-lab.com";
 // Cloudflare Web Analytics のトークン。
 // ダッシュボードの Web Analytics →「Add a site」で nisa.nexeed-lab.com を追加し、
 // JSスニペット内の token をここに貼り付ける（空のままだと計測タグは出力されない）
-const CF_BEACON_TOKEN = "";
+const CF_BEACON_TOKEN = "db2a0fcbf49a4980803fe14fda098ca3";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

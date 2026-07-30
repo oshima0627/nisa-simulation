@@ -1,4 +1,6 @@
 import Simulator from "@/components/Simulator";
+import { AdSlot } from "@/components/AdSlot";
+import { ADSENSE_SLOTS } from "@/lib/ads";
 
 export default function Home() {
   return (
@@ -13,6 +15,9 @@ export default function Home() {
         </p>
       </div>
       <Simulator />
+      {/* 試算結果より下に置く。入力欄や結果カードの中には入れない。
+          金融商品の広告を当サイトの推奨と混同させないため、明確に離した位置に置く */}
+      <AdSlot slot={ADSENSE_SLOTS.content} className="mt-12" />
     </div>
   );
 }

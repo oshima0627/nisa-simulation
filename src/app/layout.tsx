@@ -3,6 +3,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { Noto_Sans_JP, Quicksand, Zen_Maru_Gothic } from "next/font/google";
 import "./globals.css";
+import { AdSenseScript } from "@/components/AdSenseScript";
 
 const notoSansJp = Noto_Sans_JP({
   variable: "--font-noto-sans-jp",
@@ -86,6 +87,11 @@ export default function RootLayout({
               特定の金融商品の推奨や投資助言を行うものではありません。
               制度の内容は2024年開始の新NISA（2026年7月時点）に基づいています。
             </p>
+            <p>
+              <Link href="/privacy" className="hover:text-mint-text hover:underline">
+                プライバシーポリシー
+              </Link>
+            </p>
             <p>&copy; Nexeed Lab</p>
           </div>
         </footer>
@@ -96,6 +102,7 @@ export default function RootLayout({
             strategy="afterInteractive"
           />
         )}
+        <AdSenseScript />
       </body>
     </html>
   );

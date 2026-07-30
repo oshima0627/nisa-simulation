@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AdSlot } from "@/components/AdSlot";
+import { ADSENSE_SLOTS } from "@/lib/ads";
 
 export const metadata: Metadata = {
   title: "新NISAとは？しくみをやさしく解説",
@@ -96,6 +98,9 @@ export default function GuidePage() {
         本記事は2026年7月時点の制度に基づく一般的な情報提供であり、特定の金融商品の推奨や投資助言を行うものではありません。
         最新の制度内容は金融庁のウェブサイトをご確認ください。
       </p>
+
+      {/* 免責文より下に置く。広告を記事本文の一部と読み違えられないようにする */}
+      <AdSlot slot={ADSENSE_SLOTS.content} className="mt-10" />
     </article>
   );
 }

@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AdSlot } from "@/components/AdSlot";
+import { articles } from "@/content/articles";
 import { ADSENSE_SLOTS } from "@/lib/ads";
 
 export const metadata: Metadata = {
   title: "新NISAとは？しくみをやさしく解説",
   description:
     "2024年に始まった新NISAのしくみを、はじめての人向けにやさしく解説。つみたて投資枠と成長投資枠のちがい、生涯非課税枠1,800万円のルールがわかります。",
+  alternates: { canonical: "/guide" },
 };
 
 export default function GuidePage() {
@@ -93,6 +95,32 @@ export default function GuidePage() {
           </p>
         </section>
       </div>
+
+      {/* 個別記事へのハブ。ここが唯一の入口になるので全記事へリンクを張る。
+          どこからもリンクされていないページはクロールされにくく、索引もされない。 */}
+      <section className="mt-14 border-t border-line pt-10">
+        <h2 className="font-maru mb-2 text-xl font-bold text-mint-text">
+          もっと詳しく知りたいテーマ
+        </h2>
+        <p className="text-sm text-ink-soft">
+          よくある疑問ごとに、試算の数字つきで解説しています。
+        </p>
+        <ul className="mt-5 space-y-3">
+          {articles.map((article) => (
+            <li key={article.slug}>
+              <Link
+                href={`/guide/${article.slug}`}
+                className="block rounded-lg border border-line p-4 transition-colors hover:bg-mint-bg/40"
+              >
+                <p className="font-maru font-bold">{article.title}</p>
+                <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+                  {article.description}
+                </p>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <p className="mt-12 border-t border-line pt-6 text-[11px] leading-relaxed text-ink-soft">
         本記事は2026年7月時点の制度に基づく一般的な情報提供であり、特定の金融商品の推奨や投資助言を行うものではありません。

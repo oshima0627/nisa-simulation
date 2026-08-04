@@ -2,6 +2,13 @@ import Simulator from "@/components/Simulator";
 import { AdSlot } from "@/components/AdSlot";
 import { ADSENSE_SLOTS } from "@/lib/ads";
 
+/**
+ * トップページ（シミュレーター本体）。
+ *
+ * このファイル自体はサーバーコンポーネントで、見出しと説明文だけを持つ。
+ * 入力・計算・結果表示はすべてクライアントコンポーネントの Simulator が担当し、
+ * 計算はブラウザ内で完結する（サーバーには何も送らない）。
+ */
 export default function Home() {
   return (
     <div className="mx-auto max-w-3xl px-5 py-8 sm:py-10">

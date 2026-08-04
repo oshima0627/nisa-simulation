@@ -25,8 +25,19 @@ const LIFETIME_HORIZON_YEARS = 100;
 /** 取り崩しフェーズ単体の上限（年） */
 const WITHDRAW_MAX_YEARS = 50;
 
+/**
+ * 取り崩しタブ。
+ *
+ * 「積立 → 据置 → 取り崩し」の3フェーズを順につなぎ、資産が何歳まで
+ * もつのかを試算する。積立フェーズの条件・結果は親から受け取り、
+ * このコンポーネントでは据置以降だけを計算する。
+ *
+ * - 据置フェーズ: 積立額0で積立エンジンを回すと「運用だけ続ける」計算になる
+ * - 取り崩しフェーズ: 据置後の残高を起点に simulateWithdrawal を回す
+ */
 export default function WithdrawPanel({ input, accResult, config, onChange }: Props) {
-  // 据置フェーズ: 積立なしで運用のみ続ける（積立エンジンを流用）
+  // 据置フェーズ: 積立なしで運用のみ続ける（積立エンジンを流用）。
+  // 積立フェーズの最終評価額と枠の消化状況をそのまま引き継いで開始する
   const deferResult = useMemo(() => {
     if (config.deferYears <= 0) return null;
     return simulateAccumulation({
@@ -40,32 +51,43 @@ export default function WithdrawPanel({ input, accResult, config, onChange }: Pr
     });
   }, [config.deferYears, input.annualReturnPct, input.feeAnnualPct, accResult]);
 
+  // 取り崩し開始時の資産。据置期間が0なら積立の最終評価額がそのまま起点になる
   const startValue = deferResult?.finalValue ?? accResult.finalValue;
 
   // 積立 → 据置 → 取り崩し を1本のタイムラインにつなぐ。
   // タイムライン全体は100歳（年齢未入力なら通算100年目）で打ち切る
   const accYears = input.years;
   const deferYears = config.deferYears;
+  // 取り崩しが始まる年（通算、1始まり）。積立と据置の翌年から
   const withdrawStartYear = accYears + deferYears + 1;
   const currentAge = input.currentAge;
+  // 年齢入力があれば100歳までの残り年数、なければ通算100年を上限にする
   const horizonTotalYears =
     currentAge !== undefined ? LIFETIME_HORIZON_YEARS - currentAge : LIFETIME_HORIZON_YEARS;
+  // 取り崩しに使える年数 = 上限から積立と据置を引いた残り。
+  // 取り崩し単体の上限50年でも頭打ちにし、マイナスは0に丸める
+  // （積立＋据置だけで上限に達しているケース）
   const withdrawYears = Math.max(
     0,
     Math.min(WITHDRAW_MAX_YEARS, horizonTotalYears - accYears - deferYears),
   );
   const horizonLabel = currentAge !== undefined ? "100歳" : "100年目";
 
+  // 取り崩しフェーズの計算。据置後の残高を起点に、設定した方式で引き出していく
   const withdrawResult = useMemo(
     () =>
       simulateWithdrawal({
         startValue,
+        // 簿価＝生涯枠の消化額。取り崩し時に「元本部分」と「利益部分」を
+        // 分けて課税比較・枠復活を計算するために渡す
         startBook: accResult.lifetimeUsed,
         annualReturnPct: input.annualReturnPct,
         feeAnnualPct: input.feeAnnualPct,
         method: config.method,
         monthlyAmount: config.monthlyAmount,
         annualRatePct: config.annualRatePct,
+        // withdrawYears が0でもエンジンには1以上を渡す（0年は計算対象外のため）。
+        // 0年のときは結果自体を画面に出さないので、この値は使われない
         maxYears: Math.max(1, withdrawYears),
       }),
     [
@@ -78,17 +100,24 @@ export default function WithdrawPanel({ input, accResult, config, onChange }: Pr
     ],
   );
 
+  // 3フェーズの年次スナップショットを1本の折れ線データにつなぐ。
+  // 各フェーズの year は自分のフェーズ内での1始まりなので、
+  // 前フェーズまでの年数を足して「通算の年」に直してから連結する
   const lifecycleData: LifecyclePoint[] = useMemo(() => {
+    // X軸ラベル。年齢が入力されていれば「◯歳」、なければ「◯年」で表示する
     const label = (year: number) =>
       currentAge !== undefined ? `${currentAge + year}歳` : `${year}年`;
+    // 1. 積立フェーズ（通算年 = そのままの year）
     const points: LifecyclePoint[] = accResult.snapshots.map((s) => ({
       year: s.year,
       label: label(s.year),
       資産額: s.value,
     }));
+    // 2. 据置フェーズ（積立年数ぶんずらす）
     deferResult?.snapshots.forEach((s) => {
       points.push({ year: accYears + s.year, label: label(accYears + s.year), 資産額: s.value });
     });
+    // 3. 取り崩しフェーズ（積立＋据置の年数ぶんずらす）
     withdrawResult.snapshots.forEach((s) => {
       const y = accYears + deferYears + s.year;
       points.push({ year: y, label: label(y), 資産額: s.value });
@@ -96,9 +125,13 @@ export default function WithdrawPanel({ input, accResult, config, onChange }: Pr
     return points;
   }, [accResult, deferResult, withdrawResult, accYears, deferYears, currentAge]);
 
+  // --- 「何年もつか」の表示用に、枯渇月を年・月・年齢へ分解する ---
   const depletion = withdrawResult.depletionMonth;
+  // 30ヶ月 → 2年6ヶ月。切り捨てた年数と余りの月数に分ける
   const depletionYears = depletion !== null ? Math.floor(depletion / 12) : null;
   const depletionMonths = depletion !== null ? depletion % 12 : null;
+  // 枯渇したときの年齢 = 現在年齢 + 積立年数 + 据置年数 + 取り崩し年数。
+  // 「◯歳ごろまで」という概算表示なので、取り崩し年数は切り上げでよい
   const depletionAge =
     depletion !== null && currentAge !== undefined
       ? currentAge + accYears + deferYears + Math.ceil(depletion / 12)
@@ -212,6 +245,8 @@ export default function WithdrawPanel({ input, accResult, config, onChange }: Pr
         )}
       </div>
 
+      {/* 計算上限に達していて取り崩す年数が残っていない場合は、
+          結果の代わりに理由と対処法を出す */}
       {withdrawYears === 0 && (
         <p className="rounded-2xl bg-[#fdf1e8] px-5 py-5 text-sm leading-relaxed text-[#a06a3a]">
           積立と据置の期間だけで計算上限（{horizonLabel}）に達しています。
@@ -228,6 +263,7 @@ export default function WithdrawPanel({ input, accResult, config, onChange }: Pr
             : `毎年${config.annualRatePct}%ずつ取り崩すと、資産は`}
         </p>
         <p className="mt-1">
+          {/* 枯渇した場合は「何年もつか」、しなかった場合は「いくら残るか」を主役にする */}
           {depletion !== null ? (
             <>
               <span className="font-num text-4xl font-bold leading-tight text-mint-text">
@@ -273,6 +309,9 @@ export default function WithdrawPanel({ input, accResult, config, onChange }: Pr
         </dl>
       </section>
 
+      {/* グラフ上の区切り線の位置。配列は0始まりなので通算年から1を引いて添字にする。
+          - 積立終了: 積立最終年（accYears年目）＝ 添字 accYears - 1
+          - 取り崩し開始: その前年＝ 添字 withdrawStartYear - 2 */}
       <LifecycleChart
         data={lifecycleData}
         deferStartLabel={

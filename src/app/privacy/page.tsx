@@ -6,6 +6,13 @@ export const metadata: Metadata = {
     "NISAシミュレーターのプライバシーポリシー。アクセス解析および広告配信における情報の取り扱いについて記載しています。",
 };
 
+/**
+ * プライバシーポリシーページ（/privacy）。
+ *
+ * アクセス解析（Cloudflare Web Analytics）と広告配信（Google AdSense）を
+ * 使うために掲載が必要な固定ページ。AdSenseの審査でも参照される。
+ * 記載内容を変えたときは末尾の最終更新日も合わせて直す。
+ */
 export default function PrivacyPage() {
   return (
     <article className="mx-auto max-w-3xl px-5 py-10">

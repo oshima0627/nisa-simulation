@@ -14,14 +14,25 @@ interface Props {
 const inputClass =
   "font-num w-full rounded-xl border border-line bg-surface px-4 py-3 text-base text-ink outline-none transition-shadow focus:ring-2 focus:ring-mint";
 
+/**
+ * 「目標から逆算」タブ。
+ *
+ * 目標額・期間・利回りを入れると、必要な毎月の積立額を返す。
+ * 入力状態は積立タブと共有せずこのコンポーネント内で完結させ、
+ * 「この条件でくわしく見る」を押したときだけ onApply で親へ渡す。
+ */
 export default function ReversePanel({ onApply, feeAnnualPct }: Props) {
+  // 目標額は「万円」単位で入力させる（円だと桁が多くて入力しづらいため）
   const [targetMan, setTargetMan] = useState(2000); // 万円
   const [years, setYears] = useState(20);
   const [annualReturnPct, setAnnualReturnPct] = useState(5);
 
+  // 入力が変わるたびに逆算し直す。内部では二分探索でシミュレーションを
+  // 十数回まわすため、useMemo で不要な再計算を避ける
   const result = useMemo(
     () =>
       reverseFromTarget({
+        // 計算エンジンは円で扱うので、万円→円に直して渡す
         targetAmount: targetMan * 10_000,
         years,
         annualReturnPct,
@@ -94,6 +105,7 @@ export default function ReversePanel({ onApply, feeAnnualPct }: Props) {
         </label>
       </div>
 
+      {/* 到達できる場合は必要月額を、できない場合は代替案（必要年数）を出す */}
       {result.achievable && result.requiredMonthly !== null ? (
         <div className="rounded-2xl bg-mint-tint px-5 py-5">
           <p className="text-[13px] text-mint-text">
@@ -119,6 +131,8 @@ export default function ReversePanel({ onApply, feeAnnualPct }: Props) {
         </div>
       ) : (
         <div className="rounded-2xl bg-[#fdf1e8] px-5 py-5 text-sm leading-relaxed text-[#a06a3a]">
+          {/* minYears があれば「期間を延ばせば届く」、null なら
+              50年かけても届かない＝条件そのものの見直しを促す */}
           {result.minYears !== null ? (
             <>
               月30万円（年間投資枠の上限）でも{years}年では届きません。

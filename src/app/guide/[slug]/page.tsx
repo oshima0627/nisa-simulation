@@ -10,18 +10,29 @@ import {
 } from "@/content/articles";
 import { ADSENSE_SLOTS } from "@/lib/ads";
 
+/**
+ * 解説記事の詳細ページ（/guide/[slug]）。
+ *
+ * 記事本文は `src/content/articles.ts` の構造化データとして持ち、
+ * このページはそれをHTMLに変換して描画するだけ。Markdownパーサを挟まないぶん、
+ * 見出し・段落・リスト・注記の見た目を全記事で揃えられる。
+ */
+
 const SITE_URL = "https://nisa.nexeed-lab.com";
 
-// 静的エクスポート（output: "export"）のため全記事を事前生成する
+// 静的エクスポート（output: "export"）のため全記事を事前生成する。
+// 動的ルートでも、ここで返した slug のぶんだけHTMLがビルド時に出力される
 export function generateStaticParams() {
   return getAllArticleSlugs().map((slug) => ({ slug }));
 }
 
+/** 記事ごとのtitle/descriptionとOGPを組み立てる（検索結果とSNSでの見え方を決める） */
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
+  // Next.js 15以降、params は Promise なので await して取り出す
   const { slug } = await params;
   const article = getArticleBySlug(slug);
   if (!article) return { title: "記事が見つかりません" };
@@ -29,6 +40,7 @@ export async function generateMetadata({
   return {
     title: article.title,
     description: article.description,
+    // 正規URLを明示し、クエリ付きなどの重複URLで評価が分散しないようにする
     alternates: { canonical: `/guide/${slug}` },
     openGraph: {
       type: "article",
@@ -47,8 +59,12 @@ export default async function ArticlePage({
 }) {
   const { slug } = await params;
   const article = getArticleBySlug(slug);
+  // generateStaticParams の対象外URLを直接叩かれたケース。404を返す
   if (!article) notFound();
 
+  // 関連記事の slug を記事オブジェクトに解決する。
+  // 存在しない slug（記事を消した後の消し忘れなど）は型ガードで除外し、
+  // リンク切れを画面に出さないようにする
   const related = article.related
     .map((s) => getArticleBySlug(s))
     .filter((a): a is Article => a !== undefined);
@@ -75,6 +91,8 @@ export default async function ArticlePage({
         {article.lead}
       </p>
 
+      {/* 本文。セクション → ブロックの2階層をたどり、
+          ブロックの type ごとに描画方法を切り替える */}
       <div className="mt-10 space-y-10 text-[15px] leading-relaxed">
         {article.sections.map((section) => (
           <section key={section.heading}>
@@ -87,6 +105,7 @@ export default async function ArticlePage({
                   // 段落テキストは静的データなので index を key にしても並び替えは起きない
                   return <p key={`${section.heading}-${i}`}>{block.text}</p>;
                 }
+                // 箇条書き。項目テキストは重複しない前提で key に使う
                 if (block.type === "list") {
                   return (
                     <ul
@@ -99,6 +118,7 @@ export default async function ArticlePage({
                     </ul>
                   );
                 }
+                // 残りは type: "note"。左に縦線を引いて補足であることを示す
                 return (
                   <p
                     key={`${section.heading}-${i}`}
@@ -113,6 +133,9 @@ export default async function ArticlePage({
         ))}
       </div>
 
+      {/* 記事の条件をそのまま入れたシミュレーターへの導線。
+          query は src/lib/share/params.ts のキー形式に従うので、
+          リンクを開くとその条件が復元された状態で表示される */}
       {article.simulator ? (
         <div className="mt-10 rounded-lg border border-line p-6 text-center">
           <p className="text-sm text-ink-soft">
@@ -165,6 +188,9 @@ export default async function ArticlePage({
         をご確認ください。
       </p>
 
+      {/* 構造化データ（JSON-LD）。検索エンジンに記事の種類・更新日・
+          パンくずの階層を機械可読な形で伝える。値はすべて自前のデータなので
+          dangerouslySetInnerHTML でも外部入力は混ざらない */}
       <script
         type="application/ld+json"
         // biome-ignore lint/security/noDangerouslySetInnerHtml: 構造化データ用
@@ -183,6 +209,7 @@ export default async function ArticlePage({
   );
 }
 
+/** schema.org の Article 構造化データ。記事の更新日や発行元を検索エンジンに伝える */
 function buildArticleLd(article: Article) {
   return {
     "@context": "https://schema.org",
@@ -201,6 +228,11 @@ function buildArticleLd(article: Article) {
   };
 }
 
+/**
+ * schema.org の BreadcrumbList 構造化データ。
+ * 「シミュレーター > 新NISAガイド > 記事」の階層を伝え、
+ * 検索結果にパンくず表示が出るようにする。
+ */
 function buildBreadcrumbLd(article: Article) {
   return {
     "@context": "https://schema.org",

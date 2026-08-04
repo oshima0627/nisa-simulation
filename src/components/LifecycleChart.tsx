@@ -29,6 +29,14 @@ interface Props {
   deferStartLabel?: string;
 }
 
+/**
+ * 生涯の資産推移グラフ（積立 → 据置 → 取り崩し）。
+ *
+ * AssetChart と違い内訳は分けず、資産額の1本線だけを描く。
+ * 山なりに増えて減っていく形と、フェーズの切れ目を示す縦線で、
+ * 「いつまでもつのか」を一目で読めるようにするのが狙い。
+ * データの連結（フェーズごとの年を通算年へ直す処理）は WithdrawPanel 側で行う。
+ */
 export default function LifecycleChart({
   data,
   withdrawStartLabel,
@@ -44,10 +52,12 @@ export default function LifecycleChart({
             tick={{ fill: "#98938c", fontSize: 11 }}
             tickLine={false}
             axisLine={{ stroke: "#ece9e3" }}
+            // 最長100年ぶんの点が並ぶので目盛りは間引く（両端は必ず残す）
             interval="preserveStartEnd"
             minTickGap={24}
           />
           <YAxis
+            // 円のままだと桁が多く読めないため、万円単位に丸めて表示する
             tickFormatter={(v: number) => `${Math.round(v / 10_000).toLocaleString()}万`}
             tick={{ fill: "#98938c", fontSize: 11 }}
             tickLine={false}
@@ -63,6 +73,8 @@ export default function LifecycleChart({
               color: "#3b3734",
             }}
           />
+          {/* 積立が終わる位置の縦線。据置期間があるときだけ引く
+              （据置0年なら積立終了＝取り崩し開始で線が重なるため） */}
           {deferStartLabel && (
             <ReferenceLine
               x={deferStartLabel}
@@ -77,6 +89,7 @@ export default function LifecycleChart({
               }}
             />
           )}
+          {/* 取り崩しが始まる位置の縦線。ここから資産が減少に転じる */}
           {withdrawStartLabel && (
             <ReferenceLine
               x={withdrawStartLabel}

@@ -709,10 +709,19 @@ export const articles: Article[] = [
   },
 ];
 
+/**
+ * slug から記事を1件引く。存在しない slug なら undefined。
+ * 記事数は数十件程度なので線形探索で十分（辞書化はしない）。
+ */
 export function getArticleBySlug(slug: string): Article | undefined {
   return articles.find((a) => a.slug === slug);
 }
 
+/**
+ * 全記事の slug 一覧。
+ * 静的エクスポート時に generateStaticParams が事前生成するURLを決めるのと、
+ * sitemap.xml の生成に使う。
+ */
 export function getAllArticleSlugs(): string[] {
   return articles.map((a) => a.slug);
 }

@@ -5,18 +5,30 @@ import { Noto_Sans_JP, Quicksand, Zen_Maru_Gothic } from "next/font/google";
 import "./globals.css";
 import { AdSenseScript } from "@/components/AdSenseScript";
 
+/**
+ * 全ページ共通のルートレイアウト。
+ * ヘッダー・フッター・フォント・共通メタデータ・計測タグをここで一括して当てる。
+ *
+ * next/font でフォントを読み込むと、ビルド時にセルフホスト化されて
+ * CSS変数（--font-*）として使えるようになる。globals.css 側の
+ * font-maru / font-num などのユーティリティがこの変数を参照している。
+ */
+
+// 本文用のゴシック体
 const notoSansJp = Noto_Sans_JP({
   variable: "--font-noto-sans-jp",
   subsets: ["latin"],
   weight: ["400", "500", "700"],
 });
 
+// 見出し・ボタン用の丸ゴシック。やわらかい印象づけに使う
 const zenMaru = Zen_Maru_Gothic({
   variable: "--font-zen-maru",
   subsets: ["latin"],
   weight: ["500", "700"],
 });
 
+// 金額などの数字用。桁が揃って読みやすい欧文フォント
 const quicksand = Quicksand({
   variable: "--font-quicksand",
   subsets: ["latin"],
@@ -31,9 +43,12 @@ const SITE_URL = "https://nisa.nexeed-lab.com";
 const CF_BEACON_TOKEN = "db2a0fcbf49a4980803fe14fda098ca3";
 
 export const metadata: Metadata = {
+  // 各ページで相対パス（`/guide` など）を書けるようにする基準URL
   metadataBase: new URL(SITE_URL),
   title: {
+    // トップページなど、個別にtitleを指定しないページで使われる
     default: "NISAシミュレーター | Nexeed Lab",
+    // 個別ページのtitleは %s に入り、サイト名が自動で後ろに付く
     template: "%s | NISAシミュレーター",
   },
   description:
@@ -59,6 +74,8 @@ export default function RootLayout({
       lang="ja"
       className={`${notoSansJp.variable} ${zenMaru.variable} ${quicksand.variable} h-full antialiased`}
     >
+      {/* flex縦並び＋main を flex-1 にして、内容が短いページでも
+          フッターが画面下に張り付くようにする */}
       <body className="min-h-full flex flex-col">
         <header className="border-b border-line bg-surface">
           <div className="mx-auto flex max-w-3xl items-center justify-between px-5 py-4">
@@ -80,6 +97,7 @@ export default function RootLayout({
           </div>
         </header>
         <main className="flex-1">{children}</main>
+        {/* 金融情報を扱うサイトなので、免責文は全ページ共通でフッターに置く */}
         <footer className="border-t border-line bg-surface">
           <div className="mx-auto max-w-3xl space-y-3 px-5 py-8 text-[11px] leading-relaxed text-ink-soft">
             <p>
@@ -95,6 +113,7 @@ export default function RootLayout({
             <p>&copy; Nexeed Lab</p>
           </div>
         </footer>
+        {/* アクセス解析タグ。開発中の表示を計測に混ぜないよう本番ビルドのみ出力する */}
         {process.env.NODE_ENV === "production" && CF_BEACON_TOKEN && (
           <Script
             src="https://static.cloudflareinsights.com/beacon.min.js"

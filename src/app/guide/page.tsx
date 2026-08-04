@@ -11,6 +11,13 @@ export const metadata: Metadata = {
   alternates: { canonical: "/guide" },
 };
 
+/**
+ * 制度解説ページ（/guide）。
+ *
+ * 新NISAのしくみを説明する固定コンテンツと、個別記事へのリンク一覧を持つ。
+ * 本文は更新頻度が低くデータ化する利点が薄いためJSXに直接書き、
+ * 記事一覧だけを articles から動的に生成している。
+ */
 export default function GuidePage() {
   return (
     <article className="mx-auto max-w-3xl px-5 py-10">

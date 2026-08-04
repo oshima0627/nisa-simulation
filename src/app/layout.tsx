@@ -110,7 +110,11 @@ export default function RootLayout({
                 プライバシーポリシー
               </Link>
             </p>
-            <p>&copy; Nexeed Lab</p>
+            {/* 著作権表示の年は現在年を自動で入れる。
+                ただし静的エクスポート（output: "export"）なので、この値が
+                評価されるのは「ビルド時」であって閲覧時ではない。
+                年をまたいでも再デプロイしなければ表示は古いままになる点に注意 */}
+            <p>&copy; {new Date().getFullYear()} Nexeed Lab</p>
           </div>
         </footer>
         {/* アクセス解析タグ。開発中の表示を計測に混ぜないよう本番ビルドのみ出力する */}
